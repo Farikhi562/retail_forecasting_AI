@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
+import type { SupabaseClient, User } from "@supabase/supabase-js";
 
 type SupabaseCookie = {
   name: string;
@@ -42,15 +43,26 @@ export async function createClient() {
   });
 }
 
-export async function requireUser() {
-  const supabase = await createClient();
+type RequireUserResult =
+  | { supabase: SupabaseClient; user: User }
+  | { supabase: null; user: null };
+
+export async function requireUser(): Promise<RequireUserResult> {
+  let supabase: SupabaseClient;
+
+  try {
+    supabase = await createClient();
+  } catch {
+    return { supabase: null, user: null };
+  }
+
   const {
     data: { user },
     error
   } = await supabase.auth.getUser();
 
   if (error || !user) {
-    return { supabase, user: null };
+    return { supabase: null, user: null };
   }
 
   return { supabase, user };

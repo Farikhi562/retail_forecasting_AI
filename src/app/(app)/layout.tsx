@@ -13,5 +13,5 @@ export default async function ProtectedLayout({
     redirect("/login");
   }
 
-  return <AppShell userEmail={user!.email}>{children}</AppShell>;
+  return <AppShell userEmail={user.email}>{children}</AppShell>;
 }
