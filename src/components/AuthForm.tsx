@@ -16,11 +16,31 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const [fullName, setFullName] = useState("");
   const [businessName, setBusinessName] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  function getAuthMessage(message: string) {
+    const normalized = message.toLowerCase();
+
+    if (normalized.includes("invalid login credentials")) {
+      return "Email atau password salah. Pastikan akun sudah terdaftar dan password benar.";
+    }
+
+    if (normalized.includes("email not confirmed")) {
+      return "Email belum dikonfirmasi. Cek inbox email, atau nonaktifkan Confirm email di Supabase untuk testing portfolio.";
+    }
+
+    if (normalized.includes("user already registered")) {
+      return "Email ini sudah terdaftar. Silakan login memakai akun tersebut.";
+    }
+
+    return message;
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+    setNotice(null);
     setLoading(true);
 
     const supabase = createClient();
@@ -44,7 +64,14 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     setLoading(false);
 
     if (result.error) {
-      setError(result.error.message);
+      setError(getAuthMessage(result.error.message));
+      return;
+    }
+
+    if (mode === "register" && !result.data.session) {
+      setNotice(
+        "Registrasi berhasil. Supabase meminta konfirmasi email sebelum login. Cek inbox email atau matikan Confirm email di Supabase untuk mode demo."
+      );
       return;
     }
 
@@ -126,6 +153,12 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           {error ? (
             <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
               {error}
+            </p>
+          ) : null}
+
+          {notice ? (
+            <p className="rounded-md bg-teal-50 px-3 py-2 text-sm text-teal-800">
+              {notice}
             </p>
           ) : null}
 
